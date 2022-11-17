@@ -49,23 +49,17 @@ class RegisterView(TemplateView):
         form = SignupForm(request.POST)
         if form.is_valid():
             cd = form.cleaned_data
-            if cd['password'] == cd['check_password']:
+            check_password = cd.pop('check_password')
+            if cd['password'] == check_password:
                 try:
-                    new_user = UserProfile.objects.create(
-                        username=cd['username'],
-                        password=cd['password'],
-                        first_name=cd['first_name'],
-                        last_name=cd['last_name'],
-                        email=cd['email'],
-
-                    )
+                    new_user = UserProfile.objects.create(**cd)
                     new_user.set_password(new_user.password)
                     new_user.save()
                 except:
                     messages.error(request, 'Указанный логин или пароль уже существует')
                     return redirect('/signup')
                 else:
-                    user = authenticate(request, username=cd['username'], password=cd['check_password'])
+                    user = authenticate(request, username=cd['username'], password=cd['password'])
                     if user is not None:
                         if user.is_active:
                             login(request, user)
